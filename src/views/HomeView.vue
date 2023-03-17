@@ -6,7 +6,6 @@ const router = useRouter()
 const username = ref('')
 
 const submitUsername = () => {
-  // userStore.setUsername(username.value)
   localStorage.setItem('username', username.value)
   router.push('/chat')
 }

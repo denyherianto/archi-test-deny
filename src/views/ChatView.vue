@@ -8,9 +8,14 @@ const message = ref('')
 const messages = ref([])
 const messagesCount = ref(0)
 const maxMessagesPerRequest = 500
-const username = localStorage.getItem('username', null)
+const username = localStorage.getItem('username')
+interface IMessage {
+  username: string
+  text: string
+  timestamp: string
+}
 
-const fetchMessages = async (from, to) => {
+const fetchMessages = async (from: number, to: number) => {
   const { data } = await supabase
     .from('messages')
     .select()
@@ -18,11 +23,11 @@ const fetchMessages = async (from, to) => {
     .order('timestamp', { ascending: true })
   return data
 }
-const onNewMessage = async (handler) => {
+const onNewMessage = async (handler: (value: IMessage) => void) => {
   supabase
     .channel('any')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-      handler(payload.new)
+      handler(payload.new as IMessage)
     })
     .subscribe()
 }
@@ -32,11 +37,13 @@ const createNewMessage = async () => {
   message.value = ''
 }
 
-onNewMessage((newMessage) => {
+onNewMessage((newMessage: IMessage): void => {
   messages.value = [...messages.value, newMessage]
   messagesCount.value += 1
   setTimeout(() => {
-    chatWindow.value.scrollTop = chatWindow.value.scrollHeight + 100
+    if (chatWindow.value) {
+      chatWindow.value.scrollTop = chatWindow.value?.scrollHeight + 100
+    }
   }, 100)
 })
 

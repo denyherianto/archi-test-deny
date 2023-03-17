@@ -3,17 +3,18 @@ import clsx from 'clsx'
 import { ref } from 'vue'
 import { supabase } from '../configs/supabase'
 
-const chatWindow = ref(null)
-const message = ref('')
-const messages = ref([])
-const messagesCount = ref(0)
-const maxMessagesPerRequest = 500
-const username = localStorage.getItem('username')
 interface IMessage {
   username: string
   text: string
   timestamp: string
 }
+
+const chatWindow = ref(null)
+const message = ref('')
+const messages = ref<IMessage[]>([])
+const messagesCount = ref(0)
+const maxMessagesPerRequest = 500
+const username = localStorage.getItem('username')
 
 const fetchMessages = async (from: number, to: number) => {
   const { data } = await supabase
@@ -42,6 +43,7 @@ onNewMessage((newMessage: IMessage): void => {
   messagesCount.value += 1
   setTimeout(() => {
     if (chatWindow.value) {
+      // @ts-expect-error
       chatWindow.value.scrollTop = chatWindow.value?.scrollHeight + 100
     }
   }, 100)
@@ -50,8 +52,8 @@ onNewMessage((newMessage: IMessage): void => {
 const loadMessages = async () => {
   const loadedMessages = await fetchMessages(messagesCount.value, maxMessagesPerRequest - 1)
 
-  messages.value = [...messages.value, ...loadedMessages]
-  messagesCount.value += loadedMessages.length
+  messages.value = [...messages.value as IMessage[], ...loadedMessages as IMessage[]]
+  messagesCount.value += loadedMessages?.length ?? 0
 }
 
 loadMessages()
